@@ -1,0 +1,146 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccountName": {
+      "type": "string"
+    },
+    "storageAccountType": {
+      "type": "string"
+    },
+    "storageAccountKind": {
+      "type": "string"
+    },
+    "storageAccountAccessTier": {
+      "type": "string"
+    },
+    "storageAccountSupportsHttpsTrafficOnly": {
+      "type": "bool"
+    },
+    "serviceBusNamespaceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Service Bus namespace"
+      }
+    },
+    "serviceBusQueueName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Queue"
+      }
+    },
+    "serviceBusTopicName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Topic"
+      }
+    }
+  },
+  "variables": {
+    "serviceBusDefaultSASKeyName": "RootManageSharedAccessKey",
+    "serviceBusAuthRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNamespaceName'), variables('serviceBusDefaultSASKeyName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2018-07-01",
+      "dependsOn": [],
+      "kind": "[parameters('storageAccountKind')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('storageAccountName')]",
+      "properties": {
+        "accessTier": "[parameters('storageAccountAccessTier')]",
+        "supportsHttpsTrafficOnly": "[parameters('storageAccountSupportsHttpsTrafficOnly')]"
+      },
+      "sku": {
+        "name": "[parameters('storageAccountType')]"
+      },
+      "type": "Microsoft.Storage/storageAccounts"
+    },
+    {
+      "apiVersion": "2017-04-01",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('serviceBusNamespaceName')]",
+      "resources": [
+        {
+          "apiVersion": "2017-04-01",
+          "name": "[parameters('serviceBusQueueName')]",
+          "type": "queues",
+          "dependsOn": [
+            "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusNamespaceName'))]"
+          ],
+          "properties": {
+            "path": "[parameters('serviceBusQueueName')]"
+          }
+        },
+        {
+          "apiVersion": "2017-04-01",
+          "name": "[parameters('serviceBusTopicName')]",
+          "type": "topics",
+          "dependsOn": [
+            "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusNamespaceName'))]"
+          ],
+          "properties": {
+            "path": "[parameters('serviceBusTopicName')]"
+          },
+          "resources": [
+            {
+              "type": "subscriptions",
+              "apiVersion": "2017-04-01",
+              "name": "subscription1",
+              "dependsOn": [
+                "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]",
+                "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespaceName'), parameters('serviceBusTopicName'))]"
+              ],
+              "properties": {
+                "lockDuration": "PT30S",
+                "requiresSession": false,
+                "defaultMessageTimeToLive": "P14D",
+                "deadLetteringOnMessageExpiration": false,
+                "deadLetteringOnFilterEvaluationExceptions": false,
+                "maxDeliveryCount": 10,
+                "status": "Active",
+                "enableBatchedOperations": false,
+                "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+              }
+            },
+            {
+              "type": "subscriptions",
+              "apiVersion": "2017-04-01",
+              "name": "subscription2",
+              "dependsOn": [
+                "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]",
+                "[resourceId('Microsoft.ServiceBus/namespaces/topics', parameters('serviceBusNamespaceName'), parameters('serviceBusTopicName'))]"
+              ],
+              "properties": {
+                "lockDuration": "PT30S",
+                "requiresSession": false,
+                "defaultMessageTimeToLive": "P14D",
+                "deadLetteringOnMessageExpiration": false,
+                "deadLetteringOnFilterEvaluationExceptions": false,
+                "maxDeliveryCount": 10,
+                "status": "Active",
+                "enableBatchedOperations": false,
+                "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S"
+              }
+            }
+          ]
+        }
+      ],
+      "sku": {
+        "name": "Standard",
+        "tier": "Standard"
+      },
+      "type": "Microsoft.ServiceBus/namespaces"
+    }
+  ],
+  "outputs": {
+    "storageAccountConnectionString": {
+      "type": "string",
+      "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value, ';EndpointSuffix=core.windows.net')]"
+    },
+    "ServiceBusNamespaceConnectionString": {
+      "type": "string",
+      "value": "[listkeys(variables('serviceBusAuthRuleResourceId'), '2017-04-01').primaryConnectionString]"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ServiceBusTopicSubscriber": {
+      "commandName": "Project",
+      "commandLineArgs": "subscription1"
+    }
+  }
+}
