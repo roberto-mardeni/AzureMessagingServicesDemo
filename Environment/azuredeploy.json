@@ -3,34 +3,42 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "storageAccountName": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": "rmmessagingdemo"
     },
     "storageAccountType": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": "Standard_LRS"
     },
     "storageAccountKind": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": "StorageV2"
     },
     "storageAccountAccessTier": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": "Hot"
     },
     "storageAccountSupportsHttpsTrafficOnly": {
-      "type": "bool"
+      "type": "bool",
+      "defaultValue": true
     },
     "serviceBusNamespaceName": {
       "type": "string",
+      "defaultValue": "rmmessagingdemo",
       "metadata": {
         "description": "Name of the Service Bus namespace"
       }
     },
     "serviceBusQueueName": {
       "type": "string",
+      "defaultValue": "my-queue",
       "metadata": {
         "description": "Name of the Queue"
       }
     },
     "serviceBusTopicName": {
       "type": "string",
+      "defaultValue": "my-topic",
       "metadata": {
         "description": "Name of the Topic"
       }
